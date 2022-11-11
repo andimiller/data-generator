@@ -1,6 +1,5 @@
 package net.andimiller.datagenerator
 
-import cats.Monad
 import cats.effect.kernel.Async
 import cats.effect.std.Random
 import cats.effect.{ExitCode, IO, IOApp}
@@ -24,7 +23,7 @@ class DataGeneratorApp[T: Arbitrary: Encoder](programName: String) extends IOApp
 
   def generate[F[_]: Async: Random](n: Long): F[Unit] =
     items[F]
-      .take(n)
+      .repeatN(n)
       .through(fs2.text.utf8.encode)
       .through(fs2.io.stdout)
       .compile
@@ -33,7 +32,7 @@ class DataGeneratorApp[T: Arbitrary: Encoder](programName: String) extends IOApp
   def stream[F[_]: Async: Random](every: FiniteDuration): F[Unit] =
     Stream
       .awakeEvery(every)
-      .zip(items[F])
+      .zip(items[F].repeat)
       .map(_._2)
       .through(fs2.text.utf8.encode)
       .through(fs2.io.stdout)
