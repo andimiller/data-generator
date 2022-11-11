@@ -24,6 +24,7 @@ class DataGeneratorApp[T: Arbitrary: Encoder](programName: String) extends IOApp
   def generate[F[_]: Async: Random](n: Long): F[Unit] =
     items[F]
       .repeatN(n)
+      .intersperse(System.lineSeparator())
       .through(fs2.text.utf8.encode)
       .through(fs2.io.stdout)
       .compile
@@ -34,6 +35,7 @@ class DataGeneratorApp[T: Arbitrary: Encoder](programName: String) extends IOApp
       .awakeEvery(every)
       .zip(items[F].repeat)
       .map(_._2)
+      .intersperse(System.lineSeparator())
       .through(fs2.text.utf8.encode)
       .through(fs2.io.stdout)
       .compile
